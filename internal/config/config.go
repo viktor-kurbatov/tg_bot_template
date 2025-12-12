@@ -3,29 +3,42 @@ package config
 import (
 	"fmt"
 	"os"
+
+	"github.com/viktor-kurbatov/tg_bot_template/pkg/logger"
 )
 
 type Config struct {
-	LogLevel    string // debug, info, warn, error
-	BotToken    string
+	Logger   *logger.Config
+	BotToken string
 }
 
 func Load() (*Config, error) {
 	cfg := &Config{
-		LogLevel:    os.Getenv("LOG_LEVEL"),
-		BotToken:    os.Getenv("BOT_TOKEN"),
+		Logger:   newLoggerConfig(),
+		BotToken: os.Getenv("BOT_TOKEN"),
 	}
 
-	// Устанавливаем дефолтные значения, если переменные не заданы
-	if cfg.LogLevel == "" {
-		cfg.LogLevel = "info"
-	}
-
-	// Проверяем обязательные переменные
-	// Пока только BotToken важен для старта, DatabaseURL может быть позже
 	if cfg.BotToken == "" {
 		return nil, fmt.Errorf("BOT_TOKEN is required")
 	}
 
 	return cfg, nil
+}
+
+func newLoggerConfig() *logger.Config {
+	cfg := &logger.Config{
+		Level:     os.Getenv("LOG_LEVEL"),
+		Output:    os.Getenv("LOG_OUTPUT"),
+		File:      os.Getenv("LOG_FILE"),
+		JSON:      os.Getenv("LOG_JSON") == "true",
+		AddSource: os.Getenv("LOG_LEVEL") == "debug",
+	}
+	// Устанавливаем дефолтные значения, если переменные не заданы
+	if cfg.Level == "" {
+		cfg.Level = "info"
+	}
+	if cfg.Output == "" {
+		cfg.Output = "stdout"
+	}
+	return cfg
 }

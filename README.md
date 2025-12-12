@@ -28,6 +28,9 @@
 | :--- | :--- | :--- | :--- |
 | `BOT_TOKEN` | Токен вашего Telegram бота | - | **Да** |
 | `LOG_LEVEL` | Уровень логгирования (`debug`, `info`, `warn`, `error`) | `info` | Нет |
+| `LOG_OUTPUT` | Куда писать логи (`stdout`, `stderr`, `file`) | `stdout` | Нет |
+| `LOG_FILE` | Путь к файлу логов (если `LOG_OUTPUT=file`) | `logs/app.log` | Нет |
+| `LOG_JSON` | Писать логи в JSON формате (`true`/`false`) | `false` | Нет |
 | `DATABASE_URL` | Строка подключения к БД | - | Нет |
 
 ### Настройка в VS Code

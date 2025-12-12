@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/viktor-kurbatov/tg_bot_template/internal/config"
+	"github.com/viktor-kurbatov/tg_bot_template/pkg/logger"
 )
 
 func main() {
@@ -41,39 +42,16 @@ func main() {
 	application.logger.Info("application stopped")
 }
 
-type app struct {
+type App struct {
 	logger *slog.Logger
 }
 
-func NewApp(ctx context.Context, cfg *config.Config) (*app, error) {
-	logger, err := NewLogger(cfg.LogLevel)
-	if err != nil {
-		return nil, err
-	}
-	return &app{logger: logger}, nil
+func NewApp(ctx context.Context, cfg *config.Config) (*App, error) {
+	logger := logger.New(cfg.Logger)
+	return &App{logger: logger}, nil
 }
 
-func (a *app) Start(ctx context.Context) error {
+func (a *App) Start(ctx context.Context) error {
 	a.logger.Debug("application starting")
 	return nil
-}
-
-func NewLogger(levelStr string) (*slog.Logger, error) {
-	var level slog.Level
-	switch levelStr {
-	case "debug":
-		level = slog.LevelDebug
-	case "info":
-		level = slog.LevelInfo
-	case "warn":
-		level = slog.LevelWarn
-	case "error":
-		level = slog.LevelError
-	default:
-		level = slog.LevelInfo
-	}
-	handler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: level})
-	logger := slog.New(handler)
-	logger.Info("logger initialized", "level", level)
-	return logger, nil
 }

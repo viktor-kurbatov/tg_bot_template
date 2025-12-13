@@ -22,8 +22,7 @@ func NewBot(cfg *config.Config, logger *slog.Logger) (*Telegram, error) {
 	return &Telegram{telegramBot: telegramBot, logger: logger}, nil
 }
 
-func (b *Telegram) Start(ctx context.Context) error {
+func (b *Telegram) Start(ctx context.Context){
 	b.logger.Info("Starting telegram bot")
 	b.telegramBot.Start(ctx)
-	return nil
 }

@@ -9,17 +9,23 @@ import (
 
 type Config struct {
 	Logger   *logger.Config
-	BotToken string
+	Telegram *TelegramConfig
+}
+
+type TelegramConfig struct {
+	Token string
 }
 
 func Load() (*Config, error) {
 	cfg := &Config{
 		Logger:   newLoggerConfig(),
-		BotToken: os.Getenv("BOT_TOKEN"),
+		Telegram: &TelegramConfig{
+			Token: os.Getenv("TELEGRAM_BOT_TOKEN"),
+		},
 	}
 
-	if cfg.BotToken == "" {
-		return nil, fmt.Errorf("BOT_TOKEN is required")
+	if cfg.Telegram.Token == "" {
+		return nil, fmt.Errorf("TELEGRAM_BOT_TOKEN is required")
 	}
 
 	return cfg, nil

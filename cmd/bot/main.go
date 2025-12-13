@@ -9,11 +9,12 @@ import (
 	"syscall"
 
 	"github.com/viktor-kurbatov/tg_bot_template/internal/config"
+	"github.com/viktor-kurbatov/tg_bot_template/internal/telegram"
 	"github.com/viktor-kurbatov/tg_bot_template/pkg/logger"
 )
 
 func main() {
-	fmt.Println("Starting bot app...")
+	fmt.Println("go running bot app...")
 
 	// Load configuration
 	cfg, err := config.Load()
@@ -32,8 +33,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Start application
-	application.logger.Debug("The app is going to start.")
 	if err := application.Start(ctx); err != nil {
 		application.logger.Error("application error", "error", err)
 		os.Exit(1)
@@ -43,15 +42,21 @@ func main() {
 }
 
 type App struct {
-	logger *slog.Logger
+	logger      *slog.Logger
+	telegramBot *telegram.Telegram
 }
 
 func NewApp(ctx context.Context, cfg *config.Config) (*App, error) {
 	logger := logger.New(cfg.Logger)
-	return &App{logger: logger}, nil
+	bot, err := telegram.NewBot(cfg, logger)
+	if err != nil {
+		return nil, err
+	}
+	return &App{logger: logger, telegramBot: bot}, nil
 }
 
 func (a *App) Start(ctx context.Context) error {
 	a.logger.Debug("application starting")
+	a.telegramBot.Start(ctx)
 	return nil
 }

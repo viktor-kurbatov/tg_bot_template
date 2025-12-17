@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -11,6 +10,11 @@ import (
 	"github.com/viktor-kurbatov/tg_bot_template/internal/config"
 	"github.com/viktor-kurbatov/tg_bot_template/internal/telegram"
 	"github.com/viktor-kurbatov/tg_bot_template/pkg/logger"
+)
+
+var (
+	newLogger      = logger.New
+	newTelegramBot = telegram.NewBot
 )
 
 func main() {
@@ -32,6 +36,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Failed to create application: %v\n", err)
 		os.Exit(1)
 	}
+	defer application.Close()
 
 	if err := application.Start(ctx); err != nil {
 		application.logger.Error("application error", "error", err)
@@ -42,17 +47,22 @@ func main() {
 }
 
 type App struct {
-	logger      *slog.Logger
+	logger      *logger.Logger
 	telegramBot *telegram.Telegram
 }
 
 func NewApp(ctx context.Context, cfg *config.Config) (*App, error) {
-	logger := logger.New(cfg.Logger)
-	bot, err := telegram.NewBot(cfg, logger)
+	log := newLogger(cfg.Logger)
+	bot, err := newTelegramBot(cfg, log.Logger)
 	if err != nil {
+		log.Close() // cleanup on failure
 		return nil, err
 	}
-	return &App{logger: logger, telegramBot: bot}, nil
+	return &App{logger: log, telegramBot: bot}, nil
+}
+
+func (a *App) Close() error {
+	return a.logger.Close()
 }
 
 func (a *App) Start(ctx context.Context) error {

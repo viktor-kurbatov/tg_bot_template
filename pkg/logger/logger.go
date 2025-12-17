@@ -13,11 +13,26 @@ import (
 
 // Config represents logger configuration
 type Config struct {
-	Level     string // debug, info, warn, error
-	Output    string // stdout, file
-	File      string
-	JSON      bool
-	AddSource bool
+	Level     string    // debug, info, warn, error
+	Output    string    // stdout, stderr, file
+	File      string    // path for file output
+	JSON      bool      // use JSON format
+	AddSource bool      // add source file info
+	Writer    io.Writer // custom writer (overrides Output, useful for testing)
+}
+
+// Logger wraps slog.Logger with Close() support for file writers
+type Logger struct {
+	*slog.Logger
+	closer io.Closer
+}
+
+// Close closes the underlying writer if it implements io.Closer
+func (l *Logger) Close() error {
+	if l.closer != nil {
+		return l.closer.Close()
+	}
+	return nil
 }
 
 type ctxKey string
@@ -25,20 +40,25 @@ type ctxKey string
 const slogAttrs ctxKey = "slog_attrs"
 
 // New creates a new structured logger
-func New(cfg *Config) *slog.Logger {
+func New(cfg *Config) *Logger {
 	opts := &slog.HandlerOptions{
 		Level:     parseLogLevel(cfg.Level),
 		AddSource: cfg.AddSource,
 	}
 
+	output, closer := parseLogOutput(cfg)
+
 	var handler slog.Handler
 	if cfg.JSON {
-		handler = slog.NewJSONHandler(parseLogOutput(cfg), opts)
+		handler = slog.NewJSONHandler(output, opts)
 	} else {
-		handler = slog.NewTextHandler(parseLogOutput(cfg), opts)
+		handler = slog.NewTextHandler(output, opts)
 	}
 
-	return slog.New(&ctxHandler{Handler: handler})
+	return &Logger{
+		Logger: slog.New(&ctxHandler{Handler: handler}),
+		closer: closer,
+	}
 }
 
 // ctxHandler enriches log records with context attributes
@@ -90,24 +110,30 @@ func parseLogLevel(level string) slog.Level {
 }
 
 // parseLogOutput determines output writer from environment
-func parseLogOutput(cfg *Config) io.Writer {
+func parseLogOutput(cfg *Config) (io.Writer, io.Closer) {
+	// Custom writer takes priority (useful for testing)
+	if cfg.Writer != nil {
+		return cfg.Writer, nil
+	}
+
 	switch cfg.Output {
 	case "stdout", "":
-		return os.Stdout
+		return os.Stdout, nil
 	case "stderr":
-		return os.Stderr
+		return os.Stderr, nil
 	case "file":
 		if cfg.File == "" {
 			cfg.File = "logs/app.log"
 		}
-		return &lumberjack.Logger{
+		lj := &lumberjack.Logger{
 			Filename:   cfg.File,
 			MaxSize:    10, // megabytes
 			MaxBackups: 3,
 			MaxAge:     28, // days
 			Compress:   false,
 		}
+		return lj, lj
 	default:
-		return os.Stdout
+		return os.Stdout, nil
 	}
 }

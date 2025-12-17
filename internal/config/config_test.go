@@ -1,26 +1,12 @@
 package config
 
 import (
-	"os"
 	"testing"
 )
 
 func TestLoad(t *testing.T) {
-	// Сохраняем текущие env vars, чтобы восстановить после теста
-	originalToken := os.Getenv("BOT_TOKEN")
-	originalLogLevel := os.Getenv("LOG_LEVEL")
-	originalLogOutput := os.Getenv("LOG_OUTPUT")
-
-	defer func() {
-		os.Setenv("BOT_TOKEN", originalToken)
-		os.Setenv("LOG_LEVEL", originalLogLevel)
-		os.Setenv("LOG_OUTPUT", originalLogOutput)
-	}()
-
 	t.Run("Default values", func(t *testing.T) {
-		os.Unsetenv("LOG_LEVEL")
-		os.Unsetenv("LOG_OUTPUT")
-		os.Setenv("BOT_TOKEN", "test_token")
+		t.Setenv("TELEGRAM_BOT_TOKEN", "test_token")
 
 		cfg, err := Load()
 		if err != nil {
@@ -36,11 +22,11 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("Custom values", func(t *testing.T) {
-		os.Setenv("BOT_TOKEN", "test_token")
-		os.Setenv("LOG_LEVEL", "debug")
-		os.Setenv("LOG_OUTPUT", "file")
-		os.Setenv("LOG_FILE", "app.log")
-		os.Setenv("LOG_JSON", "true")
+		t.Setenv("TELEGRAM_BOT_TOKEN", "test_token")
+		t.Setenv("LOG_LEVEL", "debug")
+		t.Setenv("LOG_OUTPUT", "file")
+		t.Setenv("LOG_FILE", "app.log")
+		t.Setenv("LOG_JSON", "true")
 
 		cfg, err := Load()
 		if err != nil {
@@ -66,11 +52,11 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("Missing required vars", func(t *testing.T) {
-		os.Unsetenv("BOT_TOKEN")
+		t.Setenv("TELEGRAM_BOT_TOKEN", "")
 
 		_, err := Load()
 		if err == nil {
-			t.Error("Expected error for missing BOT_TOKEN, got nil")
+			t.Error("Expected error for missing TELEGRAM_BOT_TOKEN, got nil")
 		}
 	})
 }

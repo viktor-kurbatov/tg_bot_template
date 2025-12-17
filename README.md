@@ -19,6 +19,15 @@
 *   `internal/domain/` — Доменные сущности и интерфейсы.
 *   `internal/service/` — Бизнес-логика.
 *   `internal/repository/` — Работа с данными (БД).
+*   `internal/telegram/` — Логика Telegram бота (middleware, handlers).
+*   `pkg/logger/` — Структурный логгер с поддержкой ротации файлов.
+
+## ✨ Возможности
+
+*   **Graceful Shutdown** — корректное завершение при SIGINT/SIGTERM
+*   **Recover Middleware** — бот не падает от паник в хендлерах
+*   **Контекстное логирование** — `update_id` автоматически добавляется в логи
+*   **Ротация логов** — через lumberjack при записи в файл
 
 ## ⚙️ Конфигурация
 
